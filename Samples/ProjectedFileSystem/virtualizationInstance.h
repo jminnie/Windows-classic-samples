@@ -246,4 +246,13 @@ private:
     );
 };
 
+_Function_class_(VirtualizationInstance::StartDirEnumCallback_C)
+_Function_class_(VirtualizationInstance::EndDirEnumCallback_C)
+_Function_class_(VirtualizationInstance::GetDirEnumCallback_C)
+_Function_class_(VirtualizationInstance::GetPlaceholderInfoCallback_C)
+_Function_class_(VirtualizationInstance::GetFileDataCallback_C)
+_Function_class_(VirtualizationInstance::NotificationCallback_C)
+_Function_class_(VirtualizationInstance::QueryFileName_C)
+_Function_class_(VirtualizationInstance::CancelCommand_C)
+
 }

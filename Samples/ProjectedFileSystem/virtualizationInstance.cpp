@@ -28,11 +28,11 @@ VirtualizationInstance
     }
 
     // Register the required C callbacks.
-    _callbacks.StartDirectoryEnumerationCallback = StartDirEnumCallback_C;
-    _callbacks.EndDirectoryEnumerationCallback = EndDirEnumCallback_C;
-    _callbacks.GetDirectoryEnumerationCallback = GetDirEnumCallback_C;
-    _callbacks.GetPlaceholderInfoCallback = GetPlaceholderInfoCallback_C;
-    _callbacks.GetFileDataCallback = GetFileDataCallback_C;
+    _callbacks.StartDirectoryEnumerationCallback = VirtualizationInstance::StartDirEnumCallback_C;
+    _callbacks.EndDirectoryEnumerationCallback = VirtualizationInstance::EndDirEnumCallback_C;
+    _callbacks.GetDirectoryEnumerationCallback = VirtualizationInstance::GetDirEnumCallback_C;
+    _callbacks.GetPlaceholderInfoCallback = VirtualizationInstance::GetPlaceholderInfoCallback_C;
+    _callbacks.GetFileDataCallback = VirtualizationInstance::GetFileDataCallback_C;
 
     // Register the optional C callbacks.
 
@@ -41,65 +41,83 @@ VirtualizationInstance
     if (((GetOptionalMethods() & OptionalMethods::Notify) != OptionalMethods::None) &&
         (_options.NotificationMappingsCount != 0))
     {
-        _callbacks.NotificationCallback = NotificationCallback_C;
+        _callbacks.NotificationCallback = VirtualizationInstance::NotificationCallback_C;
     }
 
     // Register QueryFileName if the provider says it implemented it.
     if ((GetOptionalMethods() & OptionalMethods::QueryFileName) != OptionalMethods::None)
     {
-        _callbacks.QueryFileNameCallback = QueryFileName_C;
+        _callbacks.QueryFileNameCallback = VirtualizationInstance::QueryFileName_C;
     }
 
     // Register CancelCommand if the provider says it implemented it.
     if ((GetOptionalMethods() & OptionalMethods::CancelCommand) != OptionalMethods::None)
     {
-        _callbacks.CancelCommandCallback = CancelCommand_C;
+        _callbacks.CancelCommandCallback = VirtualizationInstance::CancelCommand_C;
     }
 
     // Start the virtualization instance.  Note that we pass our 'this' pointer in the instanceContext
     // parameter.  ProjFS will send this context back to us when calling our callbacks, which will
     // allow them to fish out this instance of the VirtualizationInstance class and call our methods.
-    hr = PrjStartVirtualizing(_rootPath.c_str(),
-                              &_callbacks,
-                              this,
-                              &_options,
-                              &_instanceHandle);
+    hr = PrjStartVirtualizing(
+        _rootPath.c_str(),
+        &_callbacks,
+        this,
+        &_options,
+        &_instanceHandle
+    );
 
     return hr;
 }
 
-void VirtualizationInstance::Stop()
+void
+VirtualizationInstance
+::Stop()
 {
     PrjStopVirtualizing(_instanceHandle);
 }
 
-HRESULT VirtualizationInstance::WritePlaceholderInfo(LPCWSTR relativePath,
-                                                     PRJ_PLACEHOLDER_INFO* placeholderInfo,
-                                                     DWORD length)
+HRESULT
+VirtualizationInstance
+::WritePlaceholderInfo(
+    LPCWSTR                 relativePath,
+    PRJ_PLACEHOLDER_INFO*   placeholderInfo,
+    DWORD                   length
+)
 {
-    return PrjWritePlaceholderInfo(_instanceHandle,
-                                   relativePath,
-                                   placeholderInfo,
-                                   length);
+    return PrjWritePlaceholderInfo(
+        _instanceHandle,
+        relativePath,
+        placeholderInfo,
+        length
+    );
 }
 
-HRESULT VirtualizationInstance::WriteFileData(LPCGUID streamId,
-                                              PVOID buffer,
-                                              ULONGLONG byteOffset,
-                                              DWORD length)
+HRESULT
+VirtualizationInstance
+::WriteFileData(
+    LPCGUID     streamId,
+    PVOID       buffer,
+    ULONGLONG   byteOffset,
+    DWORD       length
+)
 {
-    return PrjWriteFileData(_instanceHandle,
-                            streamId,
-                            buffer,
-                            byteOffset,
-                            length);
+    return PrjWriteFileData(
+        _instanceHandle,
+        streamId,
+        buffer,
+        byteOffset,
+        length
+    );
 }
 
 /////////////////////////////////////////////////////////////////
 // Default implementations for non-pure virtual callback methods.
 /////////////////////////////////////////////////////////////////
 
-HRESULT VirtualizationInstance::Notify(
+HRESULT
+VirtualizationInstance
+::Notify(
     _In_        const PRJ_CALLBACK_DATA*        CallbackData,
     _In_        BOOLEAN                         IsDirectory,
     _In_        PRJ_NOTIFICATION                NotificationType,
@@ -112,7 +130,9 @@ HRESULT VirtualizationInstance::Notify(
     throw NotImplemented();
 }
 
-HRESULT VirtualizationInstance::QueryFileName(
+HRESULT
+VirtualizationInstance
+::QueryFileName(
     _In_        const PRJ_CALLBACK_DATA*        CallbackData
 )
 {
@@ -121,7 +141,9 @@ HRESULT VirtualizationInstance::QueryFileName(
     throw NotImplemented();
 }
 
-void VirtualizationInstance::CancelCommand(
+void
+VirtualizationInstance
+::CancelCommand(
     _In_        const PRJ_CALLBACK_DATA*        CallbackData
 )
 {
@@ -135,13 +157,17 @@ void VirtualizationInstance::CancelCommand(
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 // Gets the set of optional methods the derived class has indicated that it has implemented.
-OptionalMethods VirtualizationInstance::GetOptionalMethods()
+OptionalMethods
+VirtualizationInstance
+::GetOptionalMethods()
 {
     return _implementedOptionalMethods;
 }
 
 // Sets the set of optional methods the derived class wants to indicate that it has implemented.
-void VirtualizationInstance::SetOptionalMethods(OptionalMethods optionalMethodsToSet)
+void
+VirtualizationInstance
+::SetOptionalMethods(OptionalMethods optionalMethodsToSet)
 {
     _implementedOptionalMethods |= optionalMethodsToSet;
 }
@@ -158,7 +184,9 @@ void VirtualizationInstance::SetOptionalMethods(OptionalMethods optionalMethodsT
 //
 // If the _rootPath directory already exists, this routine checks for the file that should contain
 // the stored ID.  If it exists, we assume this is our virtualization root.
-HRESULT VirtualizationInstance::EnsureVirtualizationRoot()
+HRESULT
+VirtualizationInstance
+::EnsureVirtualizationRoot()
 {
     DWORD win32error;
     GUID instanceId;
@@ -259,25 +287,37 @@ HRESULT VirtualizationInstance::EnsureVirtualizationRoot()
 // 'this' pointer out of CallbackData->InstanceContext and invokes the corresponding method.
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-HRESULT VirtualizationInstance::StartDirEnumCallback_C (
-    _In_     const PRJ_CALLBACK_DATA*   CallbackData,
-    _In_     const GUID*                EnumerationId
+HRESULT
+VirtualizationInstance
+::StartDirEnumCallback_C(
+    _In_        const PRJ_CALLBACK_DATA*   CallbackData,
+    _In_        const GUID*                EnumerationId
 )
 {
     auto instance = reinterpret_cast<VirtualizationInstance*>(CallbackData->InstanceContext);
-    return instance->StartDirEnum(CallbackData, EnumerationId);
+    return instance->StartDirEnum(
+        CallbackData,
+        EnumerationId
+    );
 }
 
-HRESULT VirtualizationInstance::EndDirEnumCallback_C (
-    _In_    const PRJ_CALLBACK_DATA*    CallbackData,
-    _In_    const GUID*                 EnumerationId
+HRESULT
+VirtualizationInstance
+::EndDirEnumCallback_C(
+    _In_        const PRJ_CALLBACK_DATA*    CallbackData,
+    _In_        const GUID*                 EnumerationId
 )
 {
     auto instance = reinterpret_cast<VirtualizationInstance*>(CallbackData->InstanceContext);
-    return instance->EndDirEnum(CallbackData, EnumerationId);
+    return instance->EndDirEnum(
+        CallbackData,
+        EnumerationId
+    );
 }
 
-HRESULT VirtualizationInstance::GetDirEnumCallback_C (
+HRESULT
+VirtualizationInstance
+::GetDirEnumCallback_C(
     _In_        const PRJ_CALLBACK_DATA*    CallbackData,
     _In_        const GUID*                 EnumerationId,
     _In_opt_    PCWSTR                      SearchExpression,
@@ -285,33 +325,43 @@ HRESULT VirtualizationInstance::GetDirEnumCallback_C (
 )
 {
     auto instance = reinterpret_cast<VirtualizationInstance*>(CallbackData->InstanceContext);
-    return instance->GetDirEnum(CallbackData,
-                                EnumerationId,
-                                SearchExpression,
-                                DirEntryBufferHandle);
+    return instance->GetDirEnum(
+        CallbackData,
+        EnumerationId,
+        SearchExpression,
+        DirEntryBufferHandle
+    );
 }
 
-HRESULT VirtualizationInstance::GetPlaceholderInfoCallback_C(
-    _In_    const PRJ_CALLBACK_DATA*    CallbackData
+HRESULT
+VirtualizationInstance
+::GetPlaceholderInfoCallback_C(
+    _In_        const PRJ_CALLBACK_DATA*    CallbackData
 )
 {
     auto instance = reinterpret_cast<VirtualizationInstance*>(CallbackData->InstanceContext);
     return instance->GetPlaceholderInfo(CallbackData);
 }
 
-HRESULT VirtualizationInstance::GetFileDataCallback_C(
-    _In_    const PRJ_CALLBACK_DATA*    CallbackData,
-    _In_    UINT64                      ByteOffset,
-    _In_    UINT32                      Length
+HRESULT
+VirtualizationInstance
+::GetFileDataCallback_C(
+    _In_        const PRJ_CALLBACK_DATA*    CallbackData,
+    _In_        UINT64                      ByteOffset,
+    _In_        UINT32                      Length
 )
 {
     auto instance = reinterpret_cast<VirtualizationInstance*>(CallbackData->InstanceContext);
-    return instance->GetFileData(CallbackData,
-                                 ByteOffset,
-                                 Length);
+    return instance->GetFileData(
+        CallbackData,
+        ByteOffset,
+        Length
+    );
 }
 
-HRESULT VirtualizationInstance::NotificationCallback_C(
+HRESULT
+VirtualizationInstance
+::NotificationCallback_C(
     _In_        const PRJ_CALLBACK_DATA*        CallbackData,
     _In_        BOOLEAN                         IsDirectory,
     _In_        PRJ_NOTIFICATION                NotificationType,
@@ -320,22 +370,30 @@ HRESULT VirtualizationInstance::NotificationCallback_C(
 )
 {
     auto instance = reinterpret_cast<VirtualizationInstance*>(CallbackData->InstanceContext);
-    return instance->Notify(CallbackData,
-                            IsDirectory,
-                            NotificationType,
-                            DestinationFileName,
-                            NotificationParameters);
+    return instance->Notify(
+        CallbackData,
+        IsDirectory,
+        NotificationType,
+        DestinationFileName,
+        NotificationParameters
+    );
 }
 
-HRESULT VirtualizationInstance::QueryFileName_C(
-    _In_    const PRJ_CALLBACK_DATA*    CallbackData)
+HRESULT
+VirtualizationInstance
+::QueryFileName_C(
+    _In_        const PRJ_CALLBACK_DATA*    CallbackData
+)
 {
     auto instance = reinterpret_cast<VirtualizationInstance*>(CallbackData->InstanceContext);
     return instance->QueryFileName(CallbackData);
 }
 
-void VirtualizationInstance::CancelCommand_C(
-    _In_    const PRJ_CALLBACK_DATA*    CallbackData)
+void
+VirtualizationInstance
+::CancelCommand_C(
+    _In_    const PRJ_CALLBACK_DATA*    CallbackData
+)
 {
     auto instance = reinterpret_cast<VirtualizationInstance*>(CallbackData->InstanceContext);
     instance->CancelCommand(CallbackData);
