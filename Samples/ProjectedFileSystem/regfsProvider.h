@@ -20,44 +20,43 @@ Abstract:
 
 namespace regfs {
 
-class RegfsProvider : public VirtualizationInstance {
-
+class RegfsProvider
+    : public VirtualizationInstance
+{
 public:
-
     RegfsProvider();
 
 private:
-
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // Overrides of the virtual callback functions from the VirtualizationInstance base class that
     // this class will implement.
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     HRESULT StartDirEnum(
-        _In_     const PRJ_CALLBACK_DATA*   CallbackData,
-        _In_     const GUID*                EnumerationId
+        _In_        const PRJ_CALLBACK_DATA*        CallbackData,
+        _In_        const GUID*                     EnumerationId
     ) override;
 
     HRESULT EndDirEnum(
-        _In_     const PRJ_CALLBACK_DATA*   CallbackData,
-        _In_     const GUID*                EnumerationId
+        _In_        const PRJ_CALLBACK_DATA*        CallbackData,
+        _In_        const GUID*                     EnumerationId
     ) override;
 
     HRESULT GetDirEnum(
-        _In_        const PRJ_CALLBACK_DATA*    CallbackData,
-        _In_        const GUID*                 EnumerationId,
-        _In_opt_    PCWSTR                      SearchExpression,
-        _In_        PRJ_DIR_ENTRY_BUFFER_HANDLE DirEntryBufferHandle
+        _In_        const PRJ_CALLBACK_DATA*        CallbackData,
+        _In_        const GUID*                     EnumerationId,
+        _In_opt_    PCWSTR                          SearchExpression,
+        _In_        PRJ_DIR_ENTRY_BUFFER_HANDLE     DirEntryBufferHandle
     ) override;
 
     HRESULT GetPlaceholderInfo(
-        _In_    const PRJ_CALLBACK_DATA*    CallbackData
+        _In_        const PRJ_CALLBACK_DATA*        CallbackData
     ) override;
 
     HRESULT GetFileData(
-        _In_    const PRJ_CALLBACK_DATA*    CallbackData,
-        _In_    UINT64                      ByteOffset,
-        _In_    UINT32                      Length
+        _In_        const PRJ_CALLBACK_DATA*        CallbackData,
+        _In_        UINT64                          ByteOffset,
+        _In_        UINT32                          Length
     ) override;
 
     HRESULT Notify(
@@ -68,13 +67,11 @@ private:
         _Inout_     PRJ_NOTIFICATION_PARAMETERS*    NotificationParameters
     ) override;
 
-private:
-
     // Helper routine 
     HRESULT PopulateDirInfoForPath (
-        _In_     std::wstring                    relativePath,
-        _In_     DirInfo*                        dirInfo,
-        _In_     std::wstring                    searchExpression
+        _In_        std::wstring                    relativePath,
+        _In_        DirInfo*                        dirInfo,
+        _In_        std::wstring                    searchExpression
     );
 
     RegOps _regOps;

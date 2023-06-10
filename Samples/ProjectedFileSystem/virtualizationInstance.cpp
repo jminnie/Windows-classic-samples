@@ -8,23 +8,19 @@ using namespace regfs;
 // Virtualization instance control API wrappers.
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-HRESULT VirtualizationInstance::Start(LPCWSTR rootPath,
-                                      PRJ_STARTVIRTUALIZING_OPTIONS* options)
+HRESULT
+VirtualizationInstance
+::Start(
+    LPCWSTR                         rootPath,
+    PRJ_STARTVIRTUALIZING_OPTIONS*  options
+)
 {
     _rootPath = rootPath;
-
-    if (options == nullptr)
-    {
-        _options = PRJ_STARTVIRTUALIZING_OPTIONS();
-    }
-    else
-    {
-        _options = *options;
-    }
+    _options = (options != nullptr) ? *options : PRJ_STARTVIRTUALIZING_OPTIONS();
 
     // Ensure we have a virtualization root directory that is stamped with an instance ID using the
     // PrjMarkDirectoryAsPlaceholder API.
-    HRESULT hr = EnsureVirtualizationRoot();
+    auto hr = EnsureVirtualizationRoot();
 
     if (FAILED(hr))
     {

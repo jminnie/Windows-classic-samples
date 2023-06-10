@@ -48,58 +48,70 @@ Abstract:
 
 #include <stdexcept>
 
-namespace regfs {
+namespace regfs
+{
 
-struct GUIDComparer {
-    bool operator()(const GUID & Left, const GUID & Right) const
+struct GUIDComparer
+{
+    bool operator()(const GUID& Left, const GUID& Right) const
     {
         return memcmp(&Left, &Right, sizeof(Right)) < 0;
     }
 };
 
-enum OptionalMethods {
+enum OptionalMethods
+{
     None            = 0,
     Notify          = 0x1,
     QueryFileName   = 0x2,
     CancelCommand   = 0x4
 };
+
 DEFINE_ENUM_FLAG_OPERATORS(OptionalMethods);
 
-class NotImplemented : public std::logic_error {
+class NotImplemented
+    : public std::logic_error
+{
 public:
-    NotImplemented() : std::logic_error("Function not yet implemented")
+    NotImplemented()
+        : std::logic_error("Function not yet implemented")
     {};
 };
 
-class VirtualizationInstance {
-
+class VirtualizationInstance
+{
 public:
-
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // Virtualization instance control API wrappers (user mode -> kernel mode).  The derived provider
     // class should not override these methods.
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     // Starts a virtualization instance at rootPath
-    HRESULT Start(LPCWSTR rootPath, PRJ_STARTVIRTUALIZING_OPTIONS* options = nullptr);
+    HRESULT Start(
+        LPCWSTR                         rootPath,
+        PRJ_STARTVIRTUALIZING_OPTIONS*  options = nullptr
+    );
 
     // Stops a virtualization instance
     void Stop();
 
     // Send file meta data information to ProjFS, ProjFS will create an on-disk placeholder for the path.
-    HRESULT WritePlaceholderInfo(LPCWSTR relativePath,
-                                 PRJ_PLACEHOLDER_INFO* placeholderInfo,
-                                 DWORD length);
+    HRESULT WritePlaceholderInfo(
+        LPCWSTR                         relativePath,
+        PRJ_PLACEHOLDER_INFO*           placeholderInfo,
+        DWORD                           length
+    );
 
     // Send file contents to ProjFS, ProjFS will write the data into the target placeholder file
     // and convert it to hydrated placeholder state.
-    HRESULT WriteFileData(LPCGUID streamId,
-                          PVOID buffer,
-                          ULONGLONG byteOffset,
-                          DWORD length);
+    HRESULT WriteFileData(
+        LPCGUID                         streamId,
+        PVOID                           buffer,
+        ULONGLONG                       byteOffset,
+        DWORD                           length
+    );
 
 protected:
-
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // Virtualization instance callbacks (kernel mode -> user mode).  These are the methods the derived
     // provider class overrides.
@@ -108,38 +120,38 @@ protected:
     // [Mandatory] Inform the provider a directory enumeration is starting.
     // It corresponds to PRJ_START_DIRECTORY_ENUMERATION_CB in projectedfslib.h
     virtual HRESULT StartDirEnum(
-        _In_     const PRJ_CALLBACK_DATA*   CallbackData,
-        _In_     const GUID*                EnumerationId
+        _In_        const PRJ_CALLBACK_DATA*        CallbackData,
+        _In_        const GUID*                     EnumerationId
     ) = 0;
 
     // [Mandatory] Inform the provider a directory enumeration is over.
     // It corresponds to PRJ_END_DIRECTORY_ENUMERATION_CB in projectedfslib.h
     virtual HRESULT EndDirEnum(
-        _In_     const PRJ_CALLBACK_DATA*   CallbackData,
-        _In_     const GUID*                EnumerationId
+        _In_        const PRJ_CALLBACK_DATA*        CallbackData,
+        _In_        const GUID*                     EnumerationId
     ) = 0;
 
     // [Mandatory] Request directory enumeration information from the provider.
     // It corresponds to PRJ_GET_DIRECTORY_ENUMERATION_CB in projectedfslib.h
     virtual HRESULT GetDirEnum(
-        _In_        const PRJ_CALLBACK_DATA*    CallbackData,
-        _In_        const GUID*                 EnumerationId,
-        _In_opt_    PCWSTR                      SearchExpression,
-        _In_        PRJ_DIR_ENTRY_BUFFER_HANDLE DirEntryBufferHandle
+        _In_        const PRJ_CALLBACK_DATA*        CallbackData,
+        _In_        const GUID*                     EnumerationId,
+        _In_opt_    PCWSTR                          SearchExpression,
+        _In_        PRJ_DIR_ENTRY_BUFFER_HANDLE     DirEntryBufferHandle
     ) = 0;
 
     // [Mandatory] Request meta data information for a file or directory.
     // It corresponds to PRJ_GET_PLACEHOLDER_INFO_CB in projectedfslib.h
     virtual HRESULT GetPlaceholderInfo(
-        _In_    const PRJ_CALLBACK_DATA*    CallbackData
+        _In_        const PRJ_CALLBACK_DATA*        CallbackData
     ) = 0;
 
     // [Mandatory] Request the contents of a file's primary data stream.
     // It corresponds to PRJ_GET_FILE_DATA_CB in projectedfslib.h
     virtual HRESULT GetFileData(
-        _In_    const PRJ_CALLBACK_DATA*    CallbackData,
-        _In_    UINT64                      ByteOffset,
-        _In_    UINT32                      Length
+        _In_        const PRJ_CALLBACK_DATA*        CallbackData,
+        _In_        UINT64                          ByteOffset,
+        _In_        UINT32                          Length
     ) = 0;
 
     // [Optional] Deliver notifications to the provider that it has specified 
@@ -173,7 +185,6 @@ protected:
     virtual void SetOptionalMethods(OptionalMethods optionalMethodsToSet) final;
 
 private:
-
     PRJ_STARTVIRTUALIZING_OPTIONS _options = {};
     PRJ_CALLBACKS _callbacks = {};
     OptionalMethods _implementedOptionalMethods = OptionalMethods::None;
@@ -182,42 +193,40 @@ private:
     HRESULT EnsureVirtualizationRoot();
 
 protected:
-
     std::wstring _rootPath;
     PRJ_NAMESPACE_VIRTUALIZATION_CONTEXT _instanceHandle = nullptr;
 
 private:
-
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // Prototypes of the ProjFS C callbacks. ProjFS will call these, and they in turn will call
     // the VirtualizationInstance class methods.
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     static HRESULT StartDirEnumCallback_C(
-        _In_     const PRJ_CALLBACK_DATA*   CallbackData,
-        _In_     const GUID*                EnumerationId
+        _In_        const PRJ_CALLBACK_DATA*        CallbackData,
+        _In_        const GUID*                     EnumerationId
     );
 
     static HRESULT EndDirEnumCallback_C(
-        _In_    const PRJ_CALLBACK_DATA*    callbackData,
-        _In_    const GUID*                 EnumerationId
+        _In_        const PRJ_CALLBACK_DATA*        callbackData,
+        _In_        const GUID*                     EnumerationId
     );
 
     static HRESULT GetDirEnumCallback_C(
-        _In_        const PRJ_CALLBACK_DATA*    CallbackData,
-        _In_        const GUID*                 EnumerationId,
-        _In_opt_    PCWSTR                      SearchExpression,
-        _In_        PRJ_DIR_ENTRY_BUFFER_HANDLE DirEntryBufferHandle
+        _In_        const PRJ_CALLBACK_DATA*        CallbackData,
+        _In_        const GUID*                     EnumerationId,
+        _In_opt_    PCWSTR                          SearchExpression,
+        _In_        PRJ_DIR_ENTRY_BUFFER_HANDLE     DirEntryBufferHandle
     );
 
     static HRESULT GetPlaceholderInfoCallback_C(
-        _In_    const PRJ_CALLBACK_DATA*    CallbackData
+        _In_        const PRJ_CALLBACK_DATA*        CallbackData
     );
 
     static HRESULT GetFileDataCallback_C(
-        _In_    const PRJ_CALLBACK_DATA*    CallbackData,
-        _In_    UINT64                      ByteOffset,
-        _In_    UINT32                      Length
+        _In_        const PRJ_CALLBACK_DATA*        CallbackData,
+        _In_        UINT64                          ByteOffset,
+        _In_        UINT32                          Length
     );
 
     static HRESULT NotificationCallback_C(
@@ -229,11 +238,11 @@ private:
     );
 
     static HRESULT QueryFileName_C(
-        _In_ const PRJ_CALLBACK_DATA* CallbackData
+        _In_        const PRJ_CALLBACK_DATA*        CallbackData
     );
 
     static void CancelCommand_C(
-        _In_ const PRJ_CALLBACK_DATA* CallbackData
+        _In_        const PRJ_CALLBACK_DATA*        CallbackData
     );
 };
 
